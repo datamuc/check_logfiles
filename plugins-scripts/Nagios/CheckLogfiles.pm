@@ -3132,7 +3132,7 @@ sub scan {
         my $patcnt = -1;
         foreach my $patternfunc (@{$self->{patternfuncs}->{$level}}) {
           $patcnt++;
-          if (&${patternfunc}($line)) {
+          if (${patternfunc}->($line)) {
             push(@{$matches->{$level}}, $patcnt);
           }
         }
