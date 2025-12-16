@@ -4,21 +4,28 @@ on:
 jobs:
   exe:
     runs-on: windows-latest
+    continue-on-error: false
+    strategy:
+      fail-fast: false
+      matrix:
+        par: [58, 59, 61, 62, 63, 64]
+        perl: [32,'36.1',38,40,42]
     steps:
     - uses: actions/checkout@v3
     - uses: shogo82148/actions-setup-perl@v1
       with:
-        perl-version: '5.32'
+        perl-version: >-
+          5.${{ matrix.perl }}
         distribution: strawberry
     - run: cpanm PAR Win32::NetResource Win32::Daemon Win32::Service Date::Manip
     - run: cpanm --installdeps PAR::Packer
     - run: |
         $WebClient = New-Object System.Net.WebClient
-        $WebClient.DownloadFile("http://www.cpan.org/authors/id/R/RS/RSCHUPP/PAR-Packer-1.058.tar.gz","C:\temp\packer.tgz")
+        $WebClient.DownloadFile("http://www.cpan.org/authors/id/R/RS/RSCHUPP/PAR-Packer-1.0${{matrix.par}}.tar.gz","C:\temp\packer.tgz")
         c:
         cd \temp
         ptar -xvzf packer.tgz
-        cd PAR-Packer-1.058
+        cd PAR-Packer-1.0${{matrix.par}}
         (Get-Item .).FullName
         dir
         perl Makefile.PL
@@ -50,9 +57,17 @@ jobs:
 
         .\check_logfiles.exe --type eventlog:eventlog=System
         echo $LASTEXITCODE
+        .\check_logfiles.exe --type eventlog:eventlog=System
+        echo $LASTEXITCODE
+        .\check_logfiles.exe --type eventlog:eventlog=System
+        echo $LASTEXITCODE
+        .\check_logfiles.exe --type eventlog:eventlog=System
+        echo $LASTEXITCODE
+        .\check_logfiles.exe --type eventlog:eventlog=System
+        echo $LASTEXITCODE
       shell: pwsh
     - uses: actions/upload-artifact@v4
       with:
-        name: artifacts
+        name: artifacts-perl-${{matrix.perl}}-par-${{matrix.par}}
         path: "plugins-scripts"
         if-no-files-found: error
